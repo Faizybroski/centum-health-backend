@@ -1,0 +1,23 @@
+aiohttp
+fastapi
+uvicorn
+motor
+pydantic[email]
+python-dotenv
+passlib[bcrypt]
+PyJWT
+email-validator
+pydantic-settings
+python-multipart
+aiosmtplib
+
+
+# LLM Development
+azure-core
+azure-ai-documentintelligence
+openai
+azure-storage-blob
+
+Jinja2>=3.1
+PyPDF2
+slowapi

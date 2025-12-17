@@ -1,0 +1,10 @@
+.env
+local.env
+env/
+venv/
+**/__pycache__/
+*.pyc
+*.pyo
+/data/
+/uploaded_documents/
+/logs/

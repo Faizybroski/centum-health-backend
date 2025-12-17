@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>New Waitlist Subscription</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f3f4f6;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+      h2 {
+        color: #111827;
+        margin-bottom: 12px;
+      }
+      p {
+        color: #374151;
+        line-height: 1.5;
+      }
+      .info-box {
+        margin-top: 20px;
+        padding: 16px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+      }
+      .label {
+        font-weight: bold;
+        color: #111827;
+      }
+      .capitalize {
+        text-transform: capitalize;
+      }
+      .footer {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #6b7280;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>📩 New Waitlist Subscription</h2>
+      <p>Hello Admin,</p>
+      <p>A new user has joined the waitlist from the pricing page. Here are the details:</p>
+
+      <div class="info-box">
+        <p><span class="label">Email:</span> {{ subscriber_email }}</p>
+        <p><span class="label capitalize">Subscription Plan:</span> {{ subscription_type }}</p>
+        <p><span class="label">Joined At:</span> {{ subscribed_at }}</p>
+      </div>
+
+      <!-- <p>Please log in to the admin dashboard for more details.</p> -->
+
+      <div class="footer">
+        <p>&copy; {{ year }} {{ app_name }}. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
