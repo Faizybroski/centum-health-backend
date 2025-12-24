@@ -16,8 +16,25 @@ from io import BytesIO
 from PyPDF2 import PdfReader
 
 
-UPLOAD_DIR = "uploaded_documents"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# UPLOAD_DIR = "uploaded_documents"
+# os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def get_upload_dir() -> str:
+    """
+    Returns a writable upload directory.
+    - Vercel: /tmp (ephemeral)
+    - Local / VPS: project directory
+    """
+    is_vercel = os.getenv("VERCEL") == "1"
+
+    upload_dir = (
+        "/tmp/uploaded_documents"
+        if is_vercel
+        else "uploaded_documents"
+    )
+
+    os.makedirs(upload_dir, exist_ok=True)
+    return upload_dir
 
 # Allowed file types
 ALLOWED_CONTENT_TYPES = {
@@ -99,8 +116,11 @@ async def upload_documents(
             container_name = settings.AZURE_STORAGE_CONTAINER_NAME
 
             # 📂 Save local copy (temporary)
-            local_path = os.path.join(UPLOAD_DIR, unique_filename)
-            os.makedirs(UPLOAD_DIR, exist_ok=True)
+            #  #  ----------------------------------------    DEVELOPMENT COMMENT --------------------
+            # local_path = os.path.join(UPLOAD_DIR, unique_filename)
+            # os.makedirs(UPLOAD_DIR, exist_ok=True)
+            upload_dir = get_upload_dir()
+            local_path = os.path.join(upload_dir, unique_filename)
             blob_name = f"{user_id}/{unique_filename}"
 
             with open(local_path, "wb") as buffer:
@@ -114,7 +134,8 @@ async def upload_documents(
             document_data = {
                 "user_id": ObjectId(user_id),
                 "file_name": file.filename,
-                "local_path": local_path,
+                # -------------------------------   DEVELOPMENT COMMENT   -----------------------
+                # "local_path": local_path,
                 "path": blob_url,
                 "blob_name": blob_name,
                 "size": format_file_size(file_size),
