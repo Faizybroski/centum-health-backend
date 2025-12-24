@@ -17,6 +17,8 @@ load_dotenv(dotenv_path="local.env")
 IS_VERCEL = os.getenv("VERCEL") == "1"
 
 class Settings(BaseSettings):
+    ENV: str
+    LOG_LEVEL: str
     MONGO_URI: str
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
