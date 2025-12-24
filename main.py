@@ -1,5 +1,20 @@
+# import os
+# os.makedirs("logs", exist_ok=True)
 import os
-os.makedirs("logs", exist_ok=True)
+import logging
+
+LOG_DIR = "/tmp/logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(f"{LOG_DIR}/app.log"),
+        logging.StreamHandler(),  # 👈 important for Vercel dashboard
+    ],
+)
+
 
 from pydantic import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
