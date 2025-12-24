@@ -3,7 +3,7 @@ from common.db import get_db
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from models.user import UserUpdate
 from common.jwt_auth import JWTBearer
-from services.user_service import get_profile_details, update_user_profile
+from services.user_service import get_profile_details, update_user_profile, delete_user_account_service
 
 
 router = APIRouter(prefix="/user", tags=["User Profile"])
@@ -18,3 +18,9 @@ async def get_profile(user_id: str = Depends(JWTBearer()), db: AsyncIOMotorDatab
 @router.put("/profile")
 async def update_profile(user: UserUpdate, user_id: str = Depends(JWTBearer()), db: AsyncIOMotorDatabase = Depends(get_db)):
     return await update_user_profile(user, db, user_id)
+
+@router.delete("/delete")
+# async def delete_my_account(user_id: str = Depends(JWTBearer()), db: AsyncIOMotorDatabase = Depends(get_db)):
+#     return await delete_user_account_service(user_id, db)
+async def delete_my_account(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+    return await delete_user_account_service(user_id, db)

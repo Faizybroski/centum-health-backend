@@ -6,6 +6,7 @@ from typing import List
 from bson import ObjectId
 from fastapi import BackgroundTasks
 from services.health_assessment_service import generate_and_upsert_clinical_summary
+from models.faqs import FAQCreate, FAQInDB, FAQUpdate
 from datetime import datetime, timezone
 from bson.regex import Regex
 from math import ceil
@@ -342,5 +343,93 @@ async def admin_dashboard_console(db: AsyncIOMotorDatabase):
         logger.error(f"Error fetching admin dashboard data: {e}")
         return JSONResponse(
             content={"message": "Failed to fetch admin dashboard data."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+async def create_general_faq(payload: FAQCreate, db: AsyncIOMotorDatabase):
+    try:
+        faq = FAQInDB(
+        **payload.dict(),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+        is_active=True
+        )
+
+        result = await db.faqs.insert_one(faq.dict(by_alias=True))
+        
+        return JSONResponse(
+            content={
+                "message": "FAQ created successfully",
+                "faq_id": str(result.inserted_id)
+            },
+            status_code=status.HTTP_201_CREATED
+        )
+        
+    except Exception as e:
+        logger.error(f"Error creating FAQ: {e}")
+        return JSONResponse(
+            content={"message": "Failed to create FAQ."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+async def update_general_faq(faq_id: str, payload: FAQUpdate, db: AsyncIOMotorDatabase):
+    try:
+        update_data = {k: v for k, v in payload.dict(exclude_unset=True).items()}
+
+        if not update_data:
+            return JSONResponse(
+                content={"message": "No fields provided for update"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        update_data["updated_at"] = datetime.utcnow()
+
+        result = await db.faqs.update_one(
+            {"_id": ObjectId(faq_id), "is_active": True},
+            {"$set": update_data}
+        )
+
+        if result.matched_count == 0:
+            return JSONResponse(
+                content={"message": "FAQ not found or already deleted"},
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+
+        return JSONResponse(
+            content={"message": "FAQ updated successfully"},
+            status_code=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        logger.error(f"Error updating FAQ: {e}")
+
+        return JSONResponse(
+            content={"message": "Failed to update FAQ"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+async def delete_general_faq(faq_id: str, db: AsyncIOMotorDatabase):
+    try:
+        result = await db.faqs.update_one(
+            {"_id": ObjectId(faq_id), "is_active": True},
+            {"$set": {"is_active": False}}
+        )
+
+        if result.matched_count == 0:
+            return JSONResponse(
+                content={"message": "FAQ not found or already deleted"},
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+
+        return JSONResponse(
+            content={"message": "FAQ deleted successfully"},
+            status_code=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        logger.error(f"Error deleting FAQ: {e}")
+
+        return JSONResponse(
+            content={"message": "Failed to delete FAQ"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

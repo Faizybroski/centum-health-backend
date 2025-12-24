@@ -257,3 +257,19 @@ async def update_user_profile(user: UserUpdate, db: AsyncIOMotorDatabase, user_i
     except Exception as e:
         logger.error(f"Exception: profile update failed: {e}")
         return JSONResponse(content={"error": "Failed to update profile."}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+async def delete_user_account_service(user_id, db):
+    user_id = user_id.id
+
+    result = await db.users.delete_one({"_id": user_id})
+
+    if result.deleted_count == 0:
+        return JSONResponse(
+            content={"message": "User not found"},
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+    return JSONResponse(
+        content={"message": "User account permanently deleted"},
+        status_code=status.HTTP_200_OK,
+    )
