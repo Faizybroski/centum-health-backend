@@ -1,11 +1,20 @@
 import logging
+import os
 from pydantic_settings import BaseSettings
 from pydantic import EmailStr
 from typing import Optional
 from dotenv import load_dotenv
 import sys
 
+
+# ------------------------------------------------------------------
+# Environment loading
+# ------------------------------------------------------------------
+
+# Local only — Vercel ignores .env files and uses dashboard vars
 load_dotenv(dotenv_path="local.env")
+
+IS_VERCEL = os.getenv("VERCEL") == "1"
 
 class Settings(BaseSettings):
     MONGO_URI: str
@@ -50,35 +59,66 @@ class Settings(BaseSettings):
 settings = Settings()
 
 
+
+# # # ------- DEVELOPMENT ----------------------------------------------- 
+# logging.basicConfig(
+#     filename="logs/app.log",
+#     level=logging.INFO,
+#     format='%(asctime)s - %(levelname)s - %(message)s'
+# )
+# # Create logger
+# logger = logging.getLogger("centum_logger")
+# logger.setLevel(logging.INFO)
+# logger.propagate = False  # ✅ Prevent logs from going to root logger
+
+# # File handler
+# file_handler = logging.FileHandler("logs/app.log")
+# file_handler.setLevel(logging.INFO)
+
+# # Console handler
+# console_handler = logging.StreamHandler(sys.stdout)
+# console_handler.setLevel(logging.INFO)
+
+# # Formatter
+# formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+# file_handler.setFormatter(formatter)
+# console_handler.setFormatter(formatter)
+
+# # Add handlers
+# logger.addHandler(file_handler)
+# logger.addHandler(console_handler)
+
+# # Silence noisy Azure logs
+# logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
+# logging.getLogger("azure").setLevel(logging.WARNING)
+# logging.getLogger("httpx").setLevel(logging.WARNING)
+# logging.getLogger("urllib3").setLevel(logging.WARNING)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+handlers = [
+    logging.StreamHandler(sys.stdout),  # ✅ REQUIRED for Vercel
+]
+
+# Only write files on real servers (Contabo / local)
+if not IS_VERCEL:
+    os.makedirs("logs", exist_ok=True)
+    handlers.append(logging.FileHandler("logs/app.log"))
+
 logging.basicConfig(
-    filename="logs/app.log",
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=LOG_LEVEL,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    handlers=handlers,
 )
-# Create logger
-logger = logging.getLogger("centum_logger")
-logger.setLevel(logging.INFO)
-logger.propagate = False  # ✅ Prevent logs from going to root logger
 
-# File handler
-file_handler = logging.FileHandler("logs/app.log")
-file_handler.setLevel(logging.INFO)
+logger = logging.getLogger("centum")
+logger.setLevel(LOG_LEVEL)
+logger.propagate = False
 
-# Console handler
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
+# ------------------------------------------------------------------
+# Silence noisy dependencies
+# ------------------------------------------------------------------
 
-# Formatter
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
-
-# Add handlers
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-
-# Silence noisy Azure logs
-logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
 logging.getLogger("azure").setLevel(logging.WARNING)
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
