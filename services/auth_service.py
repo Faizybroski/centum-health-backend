@@ -1,5 +1,6 @@
 from common.security import verify_password
 from common.jwt_utils import create_access_token
+from common.config import logger
 from datetime import timedelta
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
@@ -77,18 +78,27 @@ async def verify_email_service(token, db):
 
 
 async def login_user_service(login_data, db):
-    email = normalize_email(login_data.email)
-    user = await db["users"].find_one({"email": email})
-    if not user:
-        return JSONResponse(content={"message": "This email address is not registered. Please check for typos or create a new account."}, status_code=status.HTTP_404_NOT_FOUND)
-    if not verify_password(login_data.password, user["hashed_password"]):
-        return JSONResponse(content={"message": "Invalid credentials."}, status_code=status.HTTP_400_BAD_REQUEST)
-    if not user.get("is_active") or not user.get("is_verified"):
-        return JSONResponse(content={"message": "Account not verified. Please verify your email."}, status_code=status.HTTP_403_FORBIDDEN)
-    if user and '_id' in user:
-        user['_id'] = str(user['_id'])
-    jwt_token = generate_jwt(user)
-    return JSONResponse(content={"access_token": jwt_token, "token_type": "bearer", "role": user.get("role", "customer")}, status_code=status.HTTP_200_OK)
+    try: 
+        email = normalize_email(login_data.email)
+        user = await db["users"].find_one({"email": email})
+        if not user:
+            return JSONResponse(content={"message": "This email address is not registered. Please check for typos or create a new account."}, status_code=status.HTTP_404_NOT_FOUND)
+        if not verify_password(login_data.password, user["hashed_password"]):
+            return JSONResponse(content={"message": "Invalid credentials."}, status_code=status.HTTP_400_BAD_REQUEST)
+        if not user.get("is_active") or not user.get("is_verified"):
+            return JSONResponse(content={"message": "Account not verified. Please verify your email."}, status_code=status.HTTP_403_FORBIDDEN)
+        if user and '_id' in user:
+            user['_id'] = str(user['_id'])
+        jwt_token = generate_jwt(user)
+        return JSONResponse(content={"access_token": jwt_token, "token_type": "bearer", "role": user.get("role", "customer")}, status_code=status.HTTP_200_OK)
+    
+    except Exception as e:
+        logger.error(f"Error logging user: {e}")
+
+        return JSONResponse(
+            content={"message": "Failed to logging user due to server error."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 async def forgot_password_service(email, background_tasks: BackgroundTasks, db):
