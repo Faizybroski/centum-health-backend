@@ -1,25 +1,33 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from fastapi.responses import JSONResponse
+from fastapi import status, HTTPException
+from models.faqs import FAQStatus
 from typing import Optional, List
+from common.config import logger
 from bson import ObjectId
 
 
-async def get_all_faqs(
-    db: AsyncIOMotorDatabase,
-    category: Optional[str] = None
-):
-    query = {"is_active": True}
+# async def get_all_faqs(db: AsyncIOMotorDatabase, category: Optional[str] = None):
+async def get_all_faqs(db: AsyncIOMotorDatabase):
 
-    if category:
-        query["category"] = category
+    try: 
+        query = {"status": FAQStatus.saved}
 
-    cursor = db.faqs.find(query).sort("created_at", -1)
+        # if category:
+        #     query["category"] = category
 
-    faqs = []
-    async for faq in cursor:
-        faq["_id"] = str(faq["_id"])
-        faqs.append(faq)
+        cursor = db.faqs.find(query).sort("_id", 1)
 
-    return {
-        "count": len(faqs),
-        "data": faqs
-    }
+        faqs = []
+        async for faq in cursor:
+            faq["_id"] = str(faq["_id"])
+            faqs.append(faq)
+
+        return JSONResponse(content={"message": "FAQ fetched successfully", "count": len(faqs), "data": faqs}, status_code=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error fetching faqs: {e}")
+        return JSONResponse(
+            content={"message": "Failed to fetch faqs."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    

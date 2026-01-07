@@ -1,12 +1,14 @@
 from fastapi.responses import JSONResponse
-from fastapi import status
+from fastapi.encoders import jsonable_encoder
+from fastapi import status, HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from common.config import logger
-from typing import List
+from typing import List, Optional
 from bson import ObjectId
 from fastapi import BackgroundTasks
 from services.health_assessment_service import generate_and_upsert_clinical_summary
-from models.faqs import FAQCreate, FAQInDB, FAQUpdate
+# from models.faqs import FAQCreate, FAQInDB, FAQUpdate, FAQStatus
+from models.faqs import FAQCreate, FAQUpdate, FAQStatus
 from datetime import datetime, timezone
 from bson.regex import Regex
 from math import ceil
@@ -345,26 +347,84 @@ async def admin_dashboard_console(db: AsyncIOMotorDatabase):
             content={"message": "Failed to fetch admin dashboard data."},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+        
+# async def get_all_faqs(db: AsyncIOMotorDatabase, category: Optional[str] = None):
+async def get_all_faqs(db: AsyncIOMotorDatabase):
+    try: 
+
+        query = {}
+
+        # if category:
+        #     query["category"] = category
+
+        cursor = db.faqs.find(query).sort("created_at", -1)
+
+        faqs = []
+        async for faq in cursor:
+            faq["_id"] = str(faq["_id"])
+            faqs.append(faq)
+
+        return JSONResponse(
+            content=jsonable_encoder({ 
+                "message": "FAQ fetched successfully",
+                "count": len(faqs),
+                "data": faqs
+            }),
+            status_code=status.HTTP_201_CREATED
+        )
+    
+    except Exception as e:
+        logger.error(f"Error fetching faqs: {e}")
+        return JSONResponse(
+            content={"message": "Failed to fetch faqs."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 async def create_general_faq(payload: FAQCreate, db: AsyncIOMotorDatabase):
     try:
-        faq = FAQInDB(
-        **payload.dict(),
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-        is_active=True
-        )
+        # # faq = FAQInDB(
+        # # **payload.dict(),
+        # # created_at=datetime.utcnow(),
+        # # updated_at=datetime.utcnow(),
+        # # is_active=True
+        # # )
 
-        result = await db.faqs.insert_one(faq.dict(by_alias=True))
+        # # result = await db.faqs.insert_one(faq.dict(by_alias=True))
+        # faq = payload.model_dump()
+        # faq.setdefault("status", FAQStatus.draft)
+        # faq["created_at"] = datetime.utcnow()
+        # faq["updated_at"] = datetime.utcnow()
         
+        # # if existing_faq.status == "saved" and payload.status == "draft": 
+        #     # payload.status = "saved"
+
+        # result = await db.faqs.insert_one(faq)
+        # # return {"message": "FAQ created", "status": faq["status"]}
+        
+        # return JSONResponse(
+        #     content={
+        #         "message": "FAQ created successfully",
+        #         "faq_id": str(result.inserted_id),
+        #          "status": faq["status"]
+        #     },
+        #     status_code=status.HTTP_201_CREATED
+        # )
+        faq = {
+            **payload.dict(),
+            "status": payload.status or "draft",
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
+        }
+        result = await db.faqs.insert_one(faq)
         return JSONResponse(
-            content={
-                "message": "FAQ created successfully",
-                "faq_id": str(result.inserted_id)
+            content={ "message": "FAQ created successfully",
+                "faq_id": str(result.inserted_id),
+                "status": faq["status"]
             },
             status_code=status.HTTP_201_CREATED
         )
-        
+
+
     except Exception as e:
         logger.error(f"Error creating FAQ: {e}")
         return JSONResponse(
@@ -374,29 +434,60 @@ async def create_general_faq(payload: FAQCreate, db: AsyncIOMotorDatabase):
 
 async def update_general_faq(faq_id: str, payload: FAQUpdate, db: AsyncIOMotorDatabase):
     try:
-        update_data = {k: v for k, v in payload.dict(exclude_unset=True).items()}
+        # # update_data = {k: v for k, v in payload.dict(exclude_unset=True).items()}
 
-        if not update_data:
-            return JSONResponse(
-                content={"message": "No fields provided for update"},
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
+        # # if not update_data:
+        #     # return JSONResponse(
+        #         # content={"message": "No fields provided for update"},
+        #         # status_code=status.HTTP_400_BAD_REQUEST
+        #     # )
 
-        update_data["updated_at"] = datetime.utcnow()
+        # # update_data["updated_at"] = datetime.utcnow()
+        
+        # existing_faq = await db.faqs.find_one(
+        #     {"_id": ObjectId(faq_id)}
+        # )
+        
+        # if not existing_faq:
+        #     raise HTTPException(status_code=404, detail="FAQ not found")
+            
+        # update_data = payload.model_dump(exclude_unset=True)
+        
+        # if (
+        #     existing_faq.get("status") == FAQStatus.saved
+        #     and update_data.get("status") == FAQStatus.draft
+        # ):
+        #     update_data["status"] = FAQStatus.saved
+        
+        # update_data["updated_at"] = datetime.utcnow()
+
+        # result = await db.faqs.update_one(
+        #     {"_id": ObjectId(faq_id), "is_active": True},
+        #     {"$set": update_data}
+        # )
+
+        # if result.matched_count == 0:
+        #     return JSONResponse(
+        #         content={"message": "FAQ not found or already deleted"},
+        #         status_code=status.HTTP_404_NOT_FOUND
+        #     )
+        
+        update = payload.dict(exclude_unset=True)
+        update["updated_at"] = datetime.now(timezone.utc)
 
         result = await db.faqs.update_one(
-            {"_id": ObjectId(faq_id), "is_active": True},
-            {"$set": update_data}
+            {"_id": ObjectId(faq_id)},
+            {"$set": update}
         )
-
+        
         if result.matched_count == 0:
             return JSONResponse(
-                content={"message": "FAQ not found or already deleted"},
+                content={"message": "FAQ not found"},
                 status_code=status.HTTP_404_NOT_FOUND
             )
 
         return JSONResponse(
-            content={"message": "FAQ updated successfully"},
+            content=jsonable_encoder({"message": "FAQ updated successfully", "updated_faq": update}),
             status_code=status.HTTP_200_OK
         )
 
@@ -407,15 +498,76 @@ async def update_general_faq(faq_id: str, payload: FAQUpdate, db: AsyncIOMotorDa
             content={"message": "Failed to update FAQ"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-async def delete_general_faq(faq_id: str, db: AsyncIOMotorDatabase):
+        
+async def publish_general_faq(faq_id: str, db: AsyncIOMotorDatabase):
     try:
         result = await db.faqs.update_one(
-            {"_id": ObjectId(faq_id), "is_active": True},
-            {"$set": {"is_active": False}}
+            {"_id": ObjectId(faq_id)},
+            {
+                "$set": {
+                    "status": FAQStatus.saved,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
         )
 
         if result.matched_count == 0:
+            return JSONResponse(
+                content={"message": "FAQ not found"},
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+
+        return JSONResponse(
+            content={"message": "FAQ saved successfully"},
+            status_code=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        logger.error(f"Error saving FAQ: {e}")
+
+        return JSONResponse(
+            content={"message": "Failed to save FAQ"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+        
+async def unpublish_general_faq(faq_id: str, db: AsyncIOMotorDatabase):
+    try:
+        result = await db.faqs.update_one(
+            {"_id": ObjectId(faq_id)},
+            {
+                "$set": {
+                    "status": FAQStatus.draft,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+
+        if result.matched_count == 0:
+            return JSONResponse(
+                content={"message": "FAQ not found"},
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+
+        return JSONResponse(
+            content={"message": "FAQ unpublished successfully"},
+            status_code=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        logger.error(f"Error unpublishing FAQ: {e}")
+
+        return JSONResponse(
+            content={"message": "Failed to unpublish FAQ"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+async def delete_general_faq(faq_id: str, db: AsyncIOMotorDatabase):
+    try:
+        result = await db.faqs.delete_one(
+            {"_id": ObjectId(faq_id)}
+        )
+
+        if result.deleted_count  == 0:
             return JSONResponse(
                 content={"message": "FAQ not found or already deleted"},
                 status_code=status.HTTP_404_NOT_FOUND

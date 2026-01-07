@@ -29,6 +29,7 @@ from routers import health_assessment
 from routers import document_upload 
 from routers.admin import admin_console
 from routers import contact
+from routers import faq
 from common.exception_handlers import (
     http_exception_handler,
     general_exception_handler,
@@ -81,6 +82,7 @@ app.include_router(health_assessment.router, prefix="/api/v1")
 app.include_router(document_upload.router, prefix="/api/v1") 
 app.include_router(admin_console.router, prefix="/api/v1")
 app.include_router(contact.router, prefix="/api/v1")
+app.include_router(faq.router, prefix="/api/v1")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
