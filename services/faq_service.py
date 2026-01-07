@@ -1,5 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from fastapi import status, HTTPException
 from models.faqs import FAQStatus
 from typing import Optional, List
@@ -23,7 +24,14 @@ async def get_all_faqs(db: AsyncIOMotorDatabase):
             faq["_id"] = str(faq["_id"])
             faqs.append(faq)
 
-        return JSONResponse(content={"message": "FAQ fetched successfully", "count": len(faqs), "data": faqs}, status_code=status.HTTP_200_OK)
+        return JSONResponse(
+            content=jsonable_encoder({ 
+                "message": "FAQ fetched successfully",
+                "count": len(faqs),
+                "data": faqs
+            }),
+            status_code=status.HTTP_201_CREATED
+        )
     except Exception as e:
         logger.error(f"Error fetching faqs: {e}")
         return JSONResponse(

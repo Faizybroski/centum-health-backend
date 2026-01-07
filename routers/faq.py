@@ -6,7 +6,7 @@ from common.db import get_db
 from services.faq_service import get_all_faqs
 
 router = APIRouter(
-    prefix="/faqs",
+    prefix="/faq",
     tags=["FAQs"]
 )
 
