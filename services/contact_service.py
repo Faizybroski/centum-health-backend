@@ -15,13 +15,20 @@ from common.config import logger
 
 async def subscribe_user(request: Request, payload: SubscribeSchema, background_tasks: BackgroundTasks, db: AsyncIOMotorDatabase = Depends(get_db)):
     try:
-        html = render_email_template("newsletter_sub_email_to_admin.html", {
+        to_admin_html = render_email_template("newsletter_sub_email_to_admin.html", {
             "subscriber_email": payload.email,
             "subscribed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "year": datetime.now().year,
             "app_name": "Centum Health"
         })
-        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, settings.ADMIN_EMAIL, "Centum Health - New Subscriber", html, bcc=settings.SUPPORT_EMAIL, reply_to=payload.email)
+        to_subscriber_html = render_email_template("newsletter_sub_email_to_subscriber.html", {
+            "subscriber_email": payload.email,
+            "subscribed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "year": datetime.now().year,
+            "app_name": "Centum Health"
+        })
+        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, settings.ADMIN_EMAIL, "Centum Health - New Subscriber", to_admin_html, bcc=settings.SUPPORT_EMAIL, reply_to=payload.email)
+        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, payload.email, "Centum Health - Subscriber", to_subscriber_html, bcc=settings.SUPPORT_EMAIL, reply_to=payload.email)
 
         existing = await db.newsletter_subscriptions.find_one({"email": normalize_email(payload.email)})
         if existing:

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Subscription Confirmed</title>
+  </head>
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+    "
+  >
+    <table
+      align="center"
+      width="600"
+      style="
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+      "
+    >
+      <!-- Logo -->
+      <tr>
+        <td align="center" style="padding-bottom: 20px;">
+          <img
+            src="https://centum-health-backend.vercel.app/static/centum_health-logo.png"
+            alt="Company Logo"
+            width="140"
+            style="display: block;"
+          />
+        </td>
+      </tr>
+
+      <!-- Content -->
+      <tr>
+        <td>
+          <h2 style="color: #333; margin-bottom: 10px;">
+            🎉 You’re Subscribed!
+          </h2>
+
+          <p style="color: #555; font-size: 15px; line-height: 1.6;">
+            Thank you for subscribing to our newsletter. You’re officially on
+            the list.
+          </p>
+
+          <p style="color: #555; font-size: 15px; line-height: 1.6;">
+            We’ll keep you updated with the latest insights, product updates,
+            and important announcements — no spam, just value.
+          </p>
+
+          <p style="font-size: 16px; color: #333; margin-top: 20px;">
+            <strong>Subscribed Email:</strong>
+            <span style="color: #14ad9c;">
+              {{subscriber_email}}
+            </span>
+          </p>
+
+          <p style="color: #888; font-size: 12px; margin-top: 25px;">
+            Subscription Time: {{subscribed_at}}
+          </p>
+
+          <hr style="margin: 25px 0; border: none; border-top: 1px solid #eee;" />
+
+          <p style="color: #777; font-size: 13px; line-height: 1.6;">
+            If you ever feel like taking a break, you can unsubscribe at any
+            time. Until then — stay tuned 🚀
+          </p>
+
+          <p style="color: #333; font-size: 14px; margin-top: 20px;">
+            — Team Centum
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
