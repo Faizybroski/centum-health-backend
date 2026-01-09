@@ -1,8 +1,9 @@
 from typing import Optional
 from bson import ObjectId
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from fastapi import Depends, Request
 from models.user import UserCreate, UserInDB, UserUpdate
 from common.security import hash_password
 from datetime import datetime, timezone, date, timedelta, time
@@ -10,6 +11,8 @@ from common.utils import normalize_email
 from fastapi.responses import JSONResponse
 from data_processing.calculate_age import calculate_chronological_age, calculate_biological_age
 from common.config import logger, settings
+from common.email_utils import custom_send_email
+from common.email_renderer import render_email_template
 # from common.security import encrypt_fields, decrypt_fields
 # from common.security import Encryptor
 import hashlib
@@ -279,7 +282,7 @@ async def delete_user_account_service(user_id, db):
         logger.error(f"Exception: profile detetion failed: {e}")
         return JSONResponse(content={"error": "Failed to delete profile."}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-async def change_password_service(user_id: str, payload, db):
+async def change_password_service(user_id: str, payload, db, background_tasks: BackgroundTasks):
     try: 
         user = await db.users.find_one({"_id": ObjectId(user_id)})
 
@@ -289,7 +292,7 @@ async def change_password_service(user_id: str, payload, db):
                 status_code=status.HTTP_404_NOT_FOUND
             )
 
-        if not pwd_context.verify(payload.current_password, user["password"]):
+        if not pwd_context.verify(payload.current_password, user["hashed_password"]):
             return JSONResponse(
                 {"message": "Current password is incorrect"},
                 status_code=status.HTTP_400_BAD_REQUEST
@@ -305,8 +308,19 @@ async def change_password_service(user_id: str, payload, db):
 
         await db.users.update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"password": hashed_password}}
+            {"$set": {"hashed_password": hashed_password}}
         )
+        
+        html = render_email_template("changePass.html", {
+            "email": user["email"],
+            "full_name": user["full_name"],
+            "changed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "year": datetime.now().year,
+            "app_name": "Centum Health",
+        })
+        
+        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, user["email"], "Centum Health - Password Changed", html, bcc=settings.SUPPORT_EMAIL, reply_to=settings.EMAIL_FROM)
+        
 
         return JSONResponse(
             {"message": "Password changed successfully"},

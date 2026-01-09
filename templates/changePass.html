@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Password Changed Successfully</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f3f4f6;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        color: #111827;
+        margin-bottom: 12px;
+      }
+      p {
+        color: #374151;
+        line-height: 1.5;
+        font-size: 15px;
+      }
+      .info-box {
+        margin-top: 20px;
+        padding: 16px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+      }
+      .label {
+        font-weight: bold;
+        color: #111827;
+      }
+      .footer {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #6b7280;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- Logo -->
+      <img
+        src="https://centumhealth.vercel.app/assets/icons/centum_health-logo.png"
+        alt="Centum Health"
+        width="140"
+        style="display: block; margin: 0 auto 20px;"
+      />
+
+      <!-- Heading -->
+      <h2>🔐 Password Updated Successfully</h2>
+
+      <!-- Greeting -->
+      <p>Hello <strong>{{ full_name }}</strong>,</p>
+
+      <p>
+        This is a confirmation that your account password was successfully
+        changed. No further action is required.
+      </p>
+
+      <!-- Info -->
+      <div class="info-box">
+        <p>
+          <span class="label">Account Email:</span>
+          {{ email }}
+        </p>
+        <p>
+          <span class="label">Changed At:</span>
+          {{ changed_at }}
+        </p>
+      </div>
+
+      <!-- Security note -->
+      <p style="margin-top: 20px;">
+        If you did not make this change, please contact our support team
+        immediately to secure your account.
+      </p>
+
+      <p>
+        For your safety, we recommend keeping your password unique and not
+        sharing it with anyone.
+      </p>
+
+      <!-- Closing -->
+      <p>
+        Stay secure,<br />
+        <strong>{{ app_name }} Team</strong>
+      </p>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>&copy; {{ year }} {{ app_name }}. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
