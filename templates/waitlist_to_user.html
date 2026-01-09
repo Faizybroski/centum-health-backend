@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>New Waitlist Subscription</title>
+    <title>You're on the Waitlist</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -48,32 +48,55 @@
       }
     </style>
   </head>
+
   <body>
     <div class="container">
+      <!-- Logo -->
       <img
         src="https://centumhealth.vercel.app/assets/icons/centum_health-logo.png"
-        alt="Company Logo"
+        alt="Centum Health"
         width="140"
-        style="display: block; margin: auto;"
+        style="display: block; margin: 0 auto 20px"
       />
-      <h2>📩 New Waitlist Subscription</h2>
-      <p>Hello Admin,</p>
+
+      <!-- Heading -->
+      <h2>🎉 You’re on the Waitlist!</h2>
+
+      <!-- Body -->
+      <p>Hello,</p>
+
       <p>
-        A new user has joined the waitlist from the pricing page. Here are the
-        details:
+        Thank you for your interest in <strong>{{ app_name }}</strong>. You’ve
+        been successfully added to our waitlist for the selected plan.
       </p>
 
+      <p>
+        We’re excited to have you with us. You’ll be among the first to know
+        when access becomes available.
+      </p>
+
+      <!-- Info -->
       <div class="info-box">
-        <p><span class="label">Email:</span> {{ subscriber_email }}</p>
         <p>
-          <span class="label capitalize">Subscription Plan:</span> {{
-          subscription_type }}
+          <span class="label">Registered Email:</span>
+          {{ subscriber_email }}
         </p>
-        <p><span class="label">Joined At:</span> {{ subscribed_at }}</p>
+        <p>
+          <span class="label capitalize">Selected Plan:</span>
+          {{ subscription_type }}
+        </p>
+        <p>
+          <span class="label">Joined At:</span>
+          {{ subscribed_at }}
+        </p>
       </div>
 
-      <!-- <p>Please log in to the admin dashboard for more details.</p> -->
+      <!-- Closing -->
+      <p style="margin-top: 20px">
+        We’ll notify you via email as soon as this plan becomes available 🙌
+      </p>
 
+      <!-- Footer -->
       <div class="footer">
         <p>&copy; {{ year }} {{ app_name }}. All rights reserved.</p>
       </div>

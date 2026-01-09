@@ -1,76 +1,85 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Centum Health - Verify Your Email</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 20px;
-        }
-        .email-container {
-            max-width: 600px;
-            margin: auto;
-            background-color: #ffffff;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        }
-        .email-header {
-            background-color: #4CAF50;
-            padding: 20px;
-            text-align: center;
-        }
-        .email-header img {
-            max-width: 120px;
-            height: auto;
-        }
-        .email-header h1 {
-            color: #ffffff;
-            margin: 10px 0 0;
-        }
-        .email-body {
-            padding: 30px;
-            text-align: center;
-        }
-        .email-body h2 {
-            color: #333333;
-        }
-        .verify-button {
-            display: inline-block;
-            margin-top: 25px;
-            padding: 12px 24px;
-            background-color: #4CAF50;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        .email-footer {
-            font-size: 12px;
-            color: #888888;
-            text-align: center;
-            padding: 20px;
-            background-color: #f2f2f2;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+      }
+      .email-container {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+      .email-header {
+        /* background-color: #4caf50; */
+        padding: 20px;
+        text-align: center;
+      }
+      .email-header img {
+        max-width: 120px;
+        height: auto;
+      }
+      .email-header h1 {
+        color: #ffffff;
+        margin: 10px 0 0;
+      }
+      .email-body {
+        padding: 30px;
+        text-align: center;
+      }
+      .email-body h2 {
+        color: #333333;
+      }
+      .verify-button {
+        display: inline-block;
+        margin-top: 25px;
+        padding: 12px 24px;
+        /* background-color: #4CAF50; */
+        background-color: #14ad9c;
+
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .email-footer {
+        font-size: 12px;
+        color: #888888;
+        text-align: center;
+        padding: 20px;
+        background-color: #f2f2f2;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="email-container">
-        <div class="email-header">
-            <img src="{{ url }}/static/centum_black_logo.png" alt="Centum Health">
-        </div>
-        <div class="email-body">
-            <h2>Hi {{ user_name }}</h2>
-            <h2>Welcome to Centum Health!</h2>
-            <p>Thank you for signing up. To complete your registration, please verify your email address.</p>
-            <a href="{{ verification_link }}" class="verify-button">Verify Email</a>
-        </div>
-        <div class="email-footer">
-            &copy; 2025 Centum Health. All rights reserved.
-        </div>
+      <div class="email-header">
+        <!-- src="{{ url }}/static/centum_black_logo.png" -->
+        <img
+          src="https://centumhealth.vercel.app/assets/icons/centum_health-logo.png"
+          alt="Centum Health"
+        />
+      </div>
+      <div class="email-body">
+        <h2>Hi {{ user_name }}</h2>
+        <h2>Welcome to Centum Health!</h2>
+        <p>
+          Thank you for signing up. To complete your registration, please verify
+          your email address.
+        </p>
+        <a href="{{ verification_link }}" class="verify-button">Verify Email</a>
+      </div>
+      <div class="email-footer">
+        &copy; 2025 Centum Health. All rights reserved.
+      </div>
     </div>
-</body>
+  </body>
 </html>

@@ -67,3 +67,8 @@ class ForgotPassword(BaseModel):
 class ResetPassword(BaseModel):
     token: str
     new_password: str
+    
+class ChangePasswordSchema(BaseModel):
+    current_password: str = Field(..., min_length=8)
+    new_password: str = Field(..., min_length=8)
+    confirm_new_password: str = Field(..., min_length=8)

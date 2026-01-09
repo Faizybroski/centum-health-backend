@@ -1,53 +1,118 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Welcome to Centum Health Tracker</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    body { margin:0; padding:0; background:#f4f6f8; font-family: Arial, sans-serif; }
-    .container { max-width:600px; margin:40px auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
-    .header { background:#4CAF50; padding:20px; text-align:center; }
-    .header img { max-width:180px; }
-    .content { padding:32px; font-size:16px; line-height:1.6; color:#1f2937; }
-    .content p { margin:0 0 16px; }
-    .content ol { padding-left:20px; margin:0 0 20px; }
-    .content li { margin-bottom:10px; }
-    .btn { display:inline-block; margin-top:10px; padding:10px 18px; background:#4CAF50; color:#ffffff !important; text-decoration:none; border-radius:6px; font-weight:bold; font-size:12px; }
-    .footer { background:#f9fafb; padding:20px; font-size:14px; color:#6b7280; text-align:center; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <!-- Header with logo -->
-    <div class="header">
-      <img src="{{ url }}/static/centum_black_logo.png" alt="Centum Health Tracker">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to Centum Health Tracker</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f4f6f8;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+      .header {
+        /* background: #4caf50; */
+        /* background: #14ad9c; */
+
+        padding: 20px;
+        text-align: center;
+      }
+      .header img {
+        max-width: 180px;
+      }
+      .content {
+        padding: 32px;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #1f2937;
+      }
+      .content p {
+        margin: 0 0 16px;
+      }
+      .content ol {
+        padding-left: 20px;
+        margin: 0 0 20px;
+      }
+      .content li {
+        margin-bottom: 10px;
+      }
+      .btn {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 10px 18px;
+        /* background: #4caf50; */
+        background: #14ad9c;
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+      }
+      .footer {
+        background: #f9fafb;
+        padding: 20px;
+        font-size: 14px;
+        color: #6b7280;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header with logo -->
+      <div class="header">
+        <!-- src="{{ url }}/static/centum_black_logo.png" -->
+        <img
+          src="https://centumhealth.vercel.app/assets/icons/centum_health-logo.png"
+          alt="Centum Health Tracker"
+        />
+      </div>
+
+      <!-- Main content -->
+      <div class="content">
+        <p>Welcome to Centum Health Tracker!</p>
+
+        <p>Dear {{ user_name }},</p>
+
+        <p>
+          Welcome to Centum Health Tracker! We're excited to help you take
+          control of your health with our AI-powered platform.
+        </p>
+
+        <p>To get started:</p>
+        <ol>
+          <li>
+            Complete your Onboarding Health Questionnaire
+            <a href="{{ onboarding_link }}" class="btn">Start Now</a>
+          </li>
+          <li>
+            Upload your lab results
+            <a href="{{ upload_link }}" class="btn">Upload</a>
+          </li>
+          <li>Explore your personalized dashboard and insights</li>
+        </ol>
+
+        <p>
+          For assistance, contact us at
+          <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
+        </p>
+
+        <p>Sincerely,<br />The Centum Health Tracker Team</p>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        © {{ current_year }} Centum Health Tracker. All rights reserved.
+      </div>
     </div>
-
-    <!-- Main content -->
-    <div class="content">
-      <p>Welcome to Centum Health Tracker!</p>
-
-      <p>Dear {{ user_name }},</p>
-
-      <p>Welcome to Centum Health Tracker! We're excited to help you take control of your health with our AI-powered platform.</p>
-
-      <p>To get started:</p>
-      <ol>
-        <li>Complete your Onboarding Health Questionnaire <a href="{{ onboarding_link }}" class="btn">Start Now</a></li>
-        <li>Upload your lab results <a href="{{ upload_link }}" class="btn">Upload</a></li>
-        <li>Explore your personalized dashboard and insights</li>
-      </ol>
-
-      <p>For assistance, contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
-
-      <p>Sincerely,<br>The Centum Health Tracker Team</p>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-      © {{ current_year }} Centum Health Tracker. All rights reserved.
-    </div>
-  </div>
-</body>
+  </body>
 </html>

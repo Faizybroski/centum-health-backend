@@ -1,6 +1,7 @@
 from typing import Optional
 from bson import ObjectId
 from fastapi import HTTPException, status
+from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from models.user import UserCreate, UserInDB, UserUpdate
 from common.security import hash_password
@@ -14,6 +15,8 @@ from common.config import logger, settings
 import hashlib
 # encryptor = Encryptor()
 from common.security import _encrypt_value
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def create_user(db: AsyncIOMotorDatabase, user: UserCreate, verification_token: str, token_expiry_time: datetime) -> Optional[UserInDB]:
     user_dict = user.model_dump()
@@ -259,17 +262,56 @@ async def update_user_profile(user: UserUpdate, db: AsyncIOMotorDatabase, user_i
         return JSONResponse(content={"error": "Failed to update profile."}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 async def delete_user_account_service(user_id, db):
-    user_id = user_id.id
+    try:
+        result = await db.users.delete_one({"_id": ObjectId(user_id)})
 
-    result = await db.users.delete_one({"_id": user_id})
-
-    if result.deleted_count == 0:
+        if result.deleted_count == 0:
+            return JSONResponse(
+                content={"message": "User not found"},
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+            
         return JSONResponse(
-            content={"message": "User not found"},
-            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "User account permanently deleted", "user": user_id},
+            status_code=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        logger.error(f"Exception: profile detetion failed: {e}")
+        return JSONResponse(content={"error": "Failed to delete profile."}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+async def change_password_service(user_id: str, payload, db):
+    try: 
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+
+        if not user:
+            return JSONResponse(
+                {"message": "User not found"},
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+
+        if not pwd_context.verify(payload.current_password, user["password"]):
+            return JSONResponse(
+                {"message": "Current password is incorrect"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        if payload.new_password != payload.confirm_new_password:
+            return JSONResponse(
+                {"message": "New passwords do not match"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        hashed_password = pwd_context.hash(payload.new_password)
+
+        await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"password": hashed_password}}
         )
 
-    return JSONResponse(
-        content={"message": "User account permanently deleted"},
-        status_code=status.HTTP_200_OK,
-    )
+        return JSONResponse(
+            {"message": "Password changed successfully"},
+            status_code=status.HTTP_200_OK
+        )
+    except Exception as e:
+        logger.error(f"Exception: account password changing failed: {e}")
+        return JSONResponse(content={"error": "Failed to change password."}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
