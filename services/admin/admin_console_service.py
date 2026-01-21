@@ -585,3 +585,58 @@ async def delete_general_faq(faq_id: str, db: AsyncIOMotorDatabase):
             content={"message": "Failed to delete FAQ"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+async def waitlist_data(
+    db: AsyncIOMotorDatabase,
+    page: int,
+    limit: int,
+    subscription_type: Optional[str],
+    search_value: Optional[str],
+):
+    try:
+        skip = (page - 1) * limit
+        query = {}
+
+        if subscription_type:
+            query["subscription_type"] = subscription_type
+
+        if search_value:
+            query["email"] = {"$regex": search_value, "$options": "i"}
+
+        total_count = await db.waitlist.count_documents(query)
+
+        cursor = (
+            db.waitlist
+            .find(query)
+            .skip(skip)
+            .limit(limit)
+        )
+
+        subscriptions = await cursor.to_list(length=limit)
+
+        # 🔑 FIX: serialize ObjectId
+        subscriptions = [
+            {**sub, "_id": str(sub["_id"])}
+            for sub in subscriptions
+        ]
+
+        return JSONResponse(
+            content=jsonable_encoder({
+                "data": {
+                    "total_count": total_count,
+                    "current_page": page,
+                    "limit": limit,
+                    "list": subscriptions,
+                    "total_pages": total_count // limit + (total_count % limit > 0) if total_count > 0 else 1
+                },
+                "message": "Waitlists fetched successfully" if subscriptions else "No waitlist found"
+            }),
+            status_code=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+        logger.error(f"Error fetching waitlist subscriptions: {e}")
+        return JSONResponse(
+            content={"message": "Failed to fetch waitlist subscriptions."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

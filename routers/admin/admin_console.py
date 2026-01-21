@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, BackgroundTasks
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from common.db import get_db
-from services.admin.admin_console_service import admin_dashboard_console, get_all_users, get_list_of_user_reports, get_failed_reports_with_user_details, retry_user_report_generation, get_all_faqs, create_general_faq, update_general_faq, delete_general_faq, publish_general_faq, unpublish_general_faq
+from services.admin.admin_console_service import admin_dashboard_console, get_all_users, get_list_of_user_reports, get_failed_reports_with_user_details, retry_user_report_generation, get_all_faqs, create_general_faq, update_general_faq, delete_general_faq, publish_general_faq, unpublish_general_faq, waitlist_data
 from common.admin.admin_dependencies import get_current_admin_user
 from models.faqs import FAQCreate, FAQUpdate
 from typing import Optional
@@ -59,3 +59,13 @@ async def unpublish_faq(faq_id: str, db: AsyncIOMotorDatabase = Depends(get_db))
 @router.delete("/faq/{faq_id}")
 async def delete_faq(faq_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
     return await delete_general_faq(faq_id, db)
+
+@router.get("/waitlists")
+async def get_waitlist_subscriptions(
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+    subscription_type: Optional[str] = Query(None, description="Filter by subscription type"),
+    search_value: Optional[str] = Query(None, description="Search by email"),
+):
+    return await waitlist_data(db, page, limit, subscription_type, search_value)

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
 from typing import Optional
 import enum
 
@@ -23,3 +24,13 @@ class ContactUsSchema(BaseModel):
 class WaitlistSchema(BaseModel):
     email: EmailStr
     subscription_type: SubscriptionType
+    
+class WaitlistResponseSchema(BaseModel):
+    id: str = Field(alias="_id")
+    email: EmailStr
+    subscription_type: SubscriptionType
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        populate_by_name = True
