@@ -4,10 +4,13 @@ from typing import Dict, Any, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from fastapi.responses import JSONResponse
 from fastapi import HTTPException, status, BackgroundTasks
+from common.email_renderer import render_email_template
+from common.email_utils import custom_send_email
+from common.config import settings
 
 from data_processing.summary_genrater import generate_clinical_summary_grok
 from models.health_assessment import (
-        HealthFormStep1Model, HealthFormStep2Model, HealthFormStep3Model, HealthFormStep4Model
+        HealthFormStep1Model, HealthFormStep2Model, HealthFormStep3Model, HealthFormStep4Model, UserEmailDTO
     )
 from common.config import logger
 from data_processing.biomarkers_range import biomarker_with_description, section_to_biomarkers
@@ -236,11 +239,25 @@ async def get_health_assessment_form_step(db: AsyncIOMotorDatabase, user_id: str
 
 
 # Create report
-async def create_report(db: AsyncIOMotorDatabase, user_id: str, report_title: str, document_ids: List[str], background_tasks: BackgroundTasks):
+# async def create_report(db: AsyncIOMotorDatabase, user_id: str, report_title: str, document_ids: List[str], background_tasks: BackgroundTasks):
+async def create_report(db: AsyncIOMotorDatabase, user_id: str, report_title: str, document_ids: List[str], background_tasks: BackgroundTasks, report_date: str, report_category: str, report_notes: str):
+
     try:
         document_ids = [ObjectId(doc_id) for doc_id in document_ids]
         documents = await db.user_reports.find({"report_title": report_title, "user_id": ObjectId(user_id)})
-       
+        
+        # email = await db.user.find_one({"_id": ObjectId(user_id)})
+        # name = await db.user.find_one({"_id": ObjectId(user_id)})
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        
+        user_dto = UserEmailDTO(
+            email=user.get("email"),
+            name=user.get("full_name", "User"),
+        )
+
+        email: str = str(user_dto.email)   # ← guaranteed valid string
+        name: str = user_dto.name
+
         if documents:
             return JSONResponse(content={"message": "Report title already exists."}, status_code=400)
     
@@ -257,6 +274,9 @@ async def create_report(db: AsyncIOMotorDatabase, user_id: str, report_title: st
         report_data = {
             "user_id": ObjectId(user_id),
             "report_title": report_title,
+            "report_category": report_category,
+            "uploaded_report_date": report_date,
+            "report_notes": report_notes,
             "document_ids": document_ids,
             "status": "pending",
             "created_at": datetime.now(timezone.utc),
@@ -266,7 +286,23 @@ async def create_report(db: AsyncIOMotorDatabase, user_id: str, report_title: st
         report = await db.user_reports.insert_one(report_data)
         report_id = report.inserted_id
         
+        # html = render_email_template("reportReady.html", {
+        #     "name": name,
+        #     "url": f"{settings.FRONTEND_BASE_URL}customer/report/detail/{report_id}",
+        #     "app_name": "Centum Health"
+        # })
+        html = render_email_template("reportReady.html", {
+            "name": name,
+            "report_title": report_title,
+            "report_category": report_category,
+            "uploaded_report_date": report_date,
+            "report_notes": report_notes,
+            "url": f"{settings.FRONTEND_BASE_URL}customer/report/detail/{report_id}",
+            "app_name": "Centum Health"
+        })
+        
         background_tasks.add_task(generate_and_upsert_clinical_summary, db, user_id, document_ids, report_id)
+        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, email, "Centum Health - Report Ready", html, bcc=settings.SUPPORT_EMAIL, reply_to=settings.ADMIN_EMAIL)
         return JSONResponse(content={"report_id": str(report_id), "message": "Report created successfully. Analysis started."}, status_code=status.HTTP_200_OK)
     except Exception as e:
         print("Error creating report:", e)
@@ -525,6 +561,7 @@ async def get_user_reports(db: AsyncIOMotorDatabase, user_id: str):
                 "_id": 0,
                 "id": { "$toString": "$_id" },
                 "report_title": 1,
+                "report_category": 1,
                 "status": 1,
                 "health_score": 1,
                 "summary": 1,
@@ -564,6 +601,8 @@ async def get_user_report_details(db: AsyncIOMotorDatabase, user_id: str, report
                 "_id": 0,
                 "id": { "$toString": "$_id" },
                 "report_title": 1,
+                "report_category": 1,
+                "report_notes": 1,
                 "status": 1,
                 "health_score": 1,
                 "uploaded_documents": {

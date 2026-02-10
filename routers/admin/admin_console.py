@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, BackgroundTasks
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from common.db import get_db
-from services.admin.admin_console_service import admin_dashboard_console, get_all_users, get_list_of_user_reports, get_failed_reports_with_user_details, retry_user_report_generation, get_all_faqs, create_general_faq, update_general_faq, delete_general_faq, publish_general_faq, unpublish_general_faq, waitlist_data
+from services.admin.admin_console_service import admin_dashboard_console, get_all_users, get_list_of_user_reports, get_failed_reports_with_user_details, retry_user_report_generation, get_all_faqs, create_general_faq, update_general_faq, delete_general_faq, publish_general_faq, unpublish_general_faq, waitlist_data, get_waitlist_subscription_by_id
 from common.admin.admin_dependencies import get_current_admin_user
 from models.faqs import FAQCreate, FAQUpdate
 from typing import Optional
@@ -69,3 +69,7 @@ async def get_waitlist_subscriptions(
     search_value: Optional[str] = Query(None, description="Search by email"),
 ):
     return await waitlist_data(db, page, limit, subscription_type, search_value)
+
+@router.get("/waitlist/{id}")
+async def waitlist_subscription_by_id(id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+    return await get_waitlist_subscription_by_id(db, id)

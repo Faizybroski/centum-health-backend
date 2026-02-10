@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Centum Health - Verify Your Email</title>
+    <title>{{ app_name }} - Your Report is Ready</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -19,17 +19,12 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
       }
       .email-header {
-        /* background-color: #4caf50; */
         padding: 20px;
         text-align: center;
       }
       .email-header img {
-        max-width: 120px;
+        max-width: 140px;
         height: auto;
-      }
-      .email-header h1 {
-        color: #ffffff;
-        margin: 10px 0 0;
       }
       .email-body {
         padding: 30px;
@@ -37,14 +32,31 @@
       }
       .email-body h2 {
         color: #333333;
+        margin-bottom: 10px;
+      }
+      .email-body p {
+        color: #555555;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 6px 0;
+      }
+      .report-meta {
+        margin-top: 15px;
+        text-align: left;
+        background-color: #f7f7f7;
+        padding: 15px;
+        border-radius: 5px;
+        font-size: 13px;
+        color: #444;
+      }
+      .report-meta strong {
+        color: #222;
       }
       .verify-button {
         display: inline-block;
         margin-top: 25px;
-        padding: 12px 24px;
-        /* background-color: #4CAF50; */
+        padding: 12px 28px;
         background-color: #14ad9c;
-
         color: #ffffff;
         text-decoration: none;
         border-radius: 5px;
@@ -62,23 +74,36 @@
   <body>
     <div class="email-container">
       <div class="email-header">
-        <!-- src="{{ url }}/static/centum_black_logo.png" -->
         <img
           src="https://centumhealth.vercel.app/assets/icons/centum_health-logo.png"
-          alt="Centum Health"
+          alt="{{ app_name }}"
         />
       </div>
+
       <div class="email-body">
-        <h2>Hi {{ user_name }}</h2>
-        <h2>Welcome to Centum Health!</h2>
+        <h2>Hi {{ name }},</h2>
+        <h2>Your Report is Ready</h2>
+
         <p>
-          Thank you for signing up. To complete your registration, please verify
-          your email address.
+          Your personalized health report has been successfully generated and is
+          now available for review.
         </p>
-        <a href="{{ verification_link }}" class="verify-button">Verify Email</a>
+
+        <div class="report-meta">
+          <p><strong>Report Title:</strong> {{ report_title }}</p>
+          <p><strong>Category:</strong> {{ report_category }}</p>
+          <p><strong>Uploaded Date:</strong> {{ uploaded_report_date }}</p>
+
+          {% if report_notes %}
+          <p><strong>Notes:</strong> {{ report_notes }}</p>
+          {% endif %}
+        </div>
+
+        <a href="{{ url }}" class="verify-button">View Report</a>
       </div>
+
       <div class="email-footer">
-        &copy; 2026 Centum Health. All rights reserved.
+        &copy; 2026 {{ app_name }}. All rights reserved.
       </div>
     </div>
   </body>

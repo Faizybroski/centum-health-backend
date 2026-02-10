@@ -9,6 +9,12 @@ class DocumentMetadata(BaseModel):
     path: str
     content_type: str = "application/pdf"
     extension: str = "pdf"
+    
+    report_category: str
+    report_title: str
+    report_date: str
+    report_notes: Optional[str] = None
+    
     status: str = Field(default="pending")
     message: str = ""
     created_at: datetime = Field(default_factory=datetime.now(timezone.utc))

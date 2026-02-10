@@ -604,13 +604,22 @@ async def waitlist_data(
             query["email"] = {"$regex": search_value, "$options": "i"}
 
         total_count = await db.waitlist.count_documents(query)
+        
 
         cursor = (
             db.waitlist
             .find(query)
+            .sort("created_at", -1)
             .skip(skip)
             .limit(limit)
         )
+
+        # cursor = (
+        #     db.waitlist
+        #     .find(query)
+        #     .skip(skip)
+        #     .limit(limit)
+        # )
 
         subscriptions = await cursor.to_list(length=limit)
 
@@ -619,6 +628,25 @@ async def waitlist_data(
             {**sub, "_id": str(sub["_id"])}
             for sub in subscriptions
         ]
+        
+        # 🔥 NEW: subscription_type-wise counts (UNFILTERED by pagination)
+        pipeline = [
+            {"$match": query if query else {}},
+            {
+                "$group": {
+                    "_id": "$subscription_type",
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        
+        counts_cursor = db.waitlist.aggregate(pipeline)
+        counts_raw = await counts_cursor.to_list(length=None)
+
+        subscription_counts = {
+            item["_id"] or "unknown": item["count"]
+            for item in counts_raw
+        }
 
         return JSONResponse(
             content=jsonable_encoder({
@@ -627,7 +655,8 @@ async def waitlist_data(
                     "current_page": page,
                     "limit": limit,
                     "list": subscriptions,
-                    "total_pages": total_count // limit + (total_count % limit > 0) if total_count > 0 else 1
+                    "total_pages": (total_count // limit + (total_count % limit > 0) if total_count > 0 else 1),
+                    "subscription_counts": subscription_counts,
                 },
                 "message": "Waitlists fetched successfully" if subscriptions else "No waitlist found"
             }),
@@ -638,5 +667,33 @@ async def waitlist_data(
         logger.error(f"Error fetching waitlist subscriptions: {e}")
         return JSONResponse(
             content={"message": "Failed to fetch waitlist subscriptions."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+        
+async def get_waitlist_subscription_by_id(db: AsyncIOMotorDatabase, id: str):
+    try:
+        subscription = await db.waitlist.find_one({"_id": ObjectId(id)})
+
+        if not subscription:
+            return JSONResponse(
+                content={"message": "Waitlist subscription not found."},
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        # 🔑 FIX: serialize ObjectId
+        subscription["_id"] = str(subscription["_id"])
+
+        return JSONResponse(
+            content=jsonable_encoder({
+                "data": subscription,
+                "message": "Waitlist subscription fetched successfully."
+            }),
+            status_code=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+        logger.error(f"Error fetching waitlist subscription by id: {e}")
+        return JSONResponse(
+            content={"message": "Failed to fetch waitlist subscription."},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

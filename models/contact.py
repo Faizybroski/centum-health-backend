@@ -21,9 +21,23 @@ class ContactUsSchema(BaseModel):
     message: str
 
 
+# class WaitlistSchema(BaseModel):
+#     email: EmailStr
+#     subscription_type: SubscriptionType
+    
 class WaitlistSchema(BaseModel):
     email: EmailStr
     subscription_type: SubscriptionType
+
+    health_goal: str
+
+    features: list[str]
+    pricing_expectation: str
+    current_tracking: str
+
+    biggest_challenge: str
+
+    interview_interest: bool
     
 class WaitlistResponseSchema(BaseModel):
     id: str = Field(alias="_id")

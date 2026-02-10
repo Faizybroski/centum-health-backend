@@ -25,10 +25,10 @@ async def get_form_step(step_number: int,db: AsyncIOMotorDatabase = Depends(get_
 
 
 @router.post("/generate-report")
-async def generate_report(document_ids: List[str], report_title: str,
+async def generate_report(document_ids: List[str], report_title: str, report_date: str, report_category: str, report_notes: str,
     background_tasks: BackgroundTasks, db: AsyncIOMotorDatabase = Depends(get_db),
     user_id: dict = Depends(get_current_user)):
-    return await create_report(db, user_id, report_title, document_ids, background_tasks)
+    return await create_report(db, user_id, report_title, document_ids, background_tasks, report_date, report_category, report_notes)
 
 
 @router.get("/reports")

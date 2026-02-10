@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, EmailStr
 import re
 
 
@@ -215,3 +215,7 @@ class CompareRequest(BaseModel):
 
 class VO2MaxUpdate(BaseModel):
     vo2_max: float
+
+class UserEmailDTO(BaseModel):
+    email: EmailStr
+    name: str | None = None

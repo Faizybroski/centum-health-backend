@@ -1,4 +1,5 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from importlib.metadata import files
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Form
 from typing import List
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from common.jwt_auth import get_current_user
@@ -12,9 +13,14 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 async def upload_document(
     user_id=Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
-    files: List[UploadFile] = File(...)
+    files: List[UploadFile] = File(...),
+        # DEV
+    report_category: str = Form(...),
+    report_title: str = Form(...),
+    report_date: str = Form(...),
+    report_notes: str | None = Form(None),
 ):
-    return await upload_documents(user_id,db ,files)
+    return await upload_documents(user_id,db ,files=files, report_category=report_category, report_title=report_title, report_date=report_date, report_notes=report_notes)
 
 
 # Get the documents of user

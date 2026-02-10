@@ -119,23 +119,41 @@ async def subscribe_waitlist(request: Request, payload: WaitlistSchema, backgrou
             "app_name": "Centum Health"
         })
 
-        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, settings.ADMIN_EMAIL, "Centum Health - New Waitlist", to_admin_html, bcc=settings.SUPPORT_EMAIL, reply_to=payload.email)
-        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, payload.email, "Centum Health - New Waitlist", to_waitlist_email_html, bcc=settings.SUPPORT_EMAIL, reply_to=settings.EMAIL_FROM)
+        
 
+        # await db.waitlist.update_one(
+        #     {"email": normalize_email(payload.email)},
+        #     {
+        #         "$set": {
+        #             "subscription_type": payload.subscription_type,
+        #             "updated_at": now
+        #         },
+        #         "$setOnInsert": {
+        #             "email": normalize_email(payload.email),
+        #             "created_at": now
+        #         }
+        #     },
+        #     upsert=True
+        # )
         await db.waitlist.update_one(
             {"email": normalize_email(payload.email)},
             {
                 "$set": {
                     "subscription_type": payload.subscription_type,
-                    "updated_at": now
+                    "questionnaire": payload.dict(exclude={"email", "subscription_type"}),
+                    "updated_at": now,
                 },
                 "$setOnInsert": {
                     "email": normalize_email(payload.email),
-                    "created_at": now
-                }
+                    "created_at": now,
+                },
             },
-            upsert=True
+            upsert=True,
         )
+        
+        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, settings.ADMIN_EMAIL, "Centum Health - New Waitlist", to_admin_html, bcc=settings.SUPPORT_EMAIL, reply_to=payload.email)
+        background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, payload.email, "Centum Health - New Waitlist", to_waitlist_email_html, bcc=settings.SUPPORT_EMAIL, reply_to=settings.EMAIL_FROM)
+        
         return JSONResponse(content={"message": f"Successfully joined the {payload.subscription_type.value} waitlist! We'll notify you when this plan becomes available"}, status_code=status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"Error adding to waitlist: {e}")
