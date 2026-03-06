@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from common.db import get_db
 from models.contact import SubscribeSchema, ContactUsSchema, WaitlistSchema
-from services.contact_service import subscribe_user, unsubscribe_user, contact_us, subscribe_waitlist
+from services.contact_service import subscribe_user, unsubscribe_user, contact_us, subscribe_waitlist, count
 from fastapi import BackgroundTasks
 from common.rate_limiter import limiter
 
@@ -35,3 +35,7 @@ async def contact(request: Request, payload: ContactUsSchema, background_tasks: 
 @limiter.limit("5/hour")
 async def join_waitlist(request: Request, payload: WaitlistSchema, background_tasks: BackgroundTasks, db: AsyncIOMotorDatabase = Depends(get_db)):
     return await subscribe_waitlist(request, payload, background_tasks, db)
+
+@router.get('/count-waitlist')
+async def waitlist_count(db: AsyncIOMotorDatabase = Depends(get_db)):
+    return await count(db)

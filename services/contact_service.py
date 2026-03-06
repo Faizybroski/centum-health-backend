@@ -154,8 +154,35 @@ async def subscribe_waitlist(request: Request, payload: WaitlistSchema, backgrou
         background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, settings.ADMIN_EMAIL, "Centum Health - New Waitlist", to_admin_html, bcc=settings.SUPPORT_EMAIL, reply_to=payload.email)
         background_tasks.add_task(custom_send_email, settings.EMAIL_FROM, payload.email, "Centum Health - New Waitlist", to_waitlist_email_html, bcc=settings.SUPPORT_EMAIL, reply_to=settings.EMAIL_FROM)
         
-        return JSONResponse(content={"message": f"Successfully joined the {payload.subscription_type.value} waitlist! We'll notify you when this plan becomes available"}, status_code=status.HTTP_200_OK)
+        count = await db.waitlist.count_documents({"subscription_type": payload.subscription_type})
+        
+        return JSONResponse(content={"message": f"Successfully joined the {payload.subscription_type.value} waitlist! We'll notify you when this plan becomes available", "count": count}, status_code=status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"Error adding to waitlist: {e}")
         return JSONResponse(content={"message": "Failed to add to waitlist."}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+        
+async def count(db: AsyncIOMotorDatabase):
+    try:
+        pipeline = [
+            {
+                "$group": {
+                    "_id": "$subscription_type",
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+
+        cursor = db.waitlist.aggregate(pipeline)
+
+        result = {}
+        async for doc in cursor:
+            result[doc["_id"]] = doc["count"]
+
+        return {
+            "counts": result
+        }
+
+    except Exception as e:
+        logger.error(f"Error counting waitlist: {e}")
+        raise JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"message": "Failed to fetch waitlist counts"})
