@@ -274,12 +274,12 @@ async def retry_user_report_generation(db: AsyncIOMotorDatabase, report_id: str,
         retry_count = report.get("retry_count", 0)
         
         # Check if max retries reached
-        if retry_count >= 3:
-            logger.info("Maximum retry attempts (3) reached. Please contact support for further assistance.")
-            return JSONResponse(
-                content={"message": "Maximum retry attempts (3) reached. Please contact support for further assistance."},
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
+        # if retry_count >= 3:
+        #     logger.info("Maximum retry attempts (3) reached. Please contact support for further assistance.")
+        #     return JSONResponse(
+        #         content={"message": "Maximum retry attempts (3) reached. Please contact support for further assistance."},
+        #         status_code=status.HTTP_400_BAD_REQUEST
+        #     )
         
         # Increment retry count and update status to pending
         await db.user_reports.update_one(
@@ -697,3 +697,98 @@ async def get_waitlist_subscription_by_id(db: AsyncIOMotorDatabase, id: str):
             content={"message": "Failed to fetch waitlist subscription."},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+        
+        
+async def bulk_retry_user_report_generation(db: AsyncIOMotorDatabase, report_ids: List[str], background_tasks: BackgroundTasks):
+    results = []
+    success_count = 0
+    failed_count = 0
+
+    for report_id in report_ids:
+        try:
+            report = await db.user_reports.find_one({"_id": ObjectId(report_id)})
+
+            if not report:
+                failed_count += 1
+                results.append({
+                    "report_id": report_id,
+                    "report_title": None,
+                    "status": "not_found",
+                    "message": "Report not found"
+                })
+                continue
+            
+            report_title = report.get("report_title", "Unknown Report")
+            
+            if report["status"] != "failed":
+                failed_count += 1
+                results.append({
+                    "report_id": report_id,
+                    "report_title": report_title,
+                    "status": "not_failed",
+                    "message": "Report is not in failed state"
+                })
+                continue
+
+            retry_count = report.get("retry_count", 0)
+
+            # if retry_count >= 3:
+            #     failed_count += 1
+            #     results.append({
+            #         "report_id": report_id,
+            #         "report_title": report_title,
+            #         "status": "max_retries",
+            #         "message": "Maximum retry attempts (3) reached"
+            #     })
+            #     continue
+
+            await db.user_reports.update_one(
+                {"_id": ObjectId(report_id)},
+                {
+                    "$set": {
+                        "status": "pending",
+                        "retry_count": retry_count + 1,
+                        "error": "",
+                        "updated_at": datetime.now(timezone.utc)
+                    }
+                }
+            )
+
+            background_tasks.add_task(
+                generate_and_upsert_clinical_summary,
+                db,
+                report["user_id"],
+                report["document_ids"],
+                report_id
+            )
+
+            success_count += 1
+            
+            results.append({
+                "report_id": report_id,
+                "report_title": report_title,
+                "status": "queued",
+                "message": f"Retry attempt {retry_count + 1} of 3 started"
+            })
+
+        except Exception as e:
+            logger.error(f"Retry error {report_id}: {e}")
+
+            failed_count += 1
+
+            results.append({
+                "report_id": report_id,
+                "report_title": None,
+                "status": "error",
+                "message": "Unexpected error occurred while retrying"
+            })
+
+    return JSONResponse(
+        content={
+            "message": "Retry process completed",
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "results": results
+        },
+        status_code=status.HTTP_200_OK
+    )

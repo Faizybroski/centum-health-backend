@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, Query, BackgroundTasks
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import BaseModel
 from common.db import get_db
-from services.admin.admin_console_service import admin_dashboard_console, get_all_users, get_list_of_user_reports, get_failed_reports_with_user_details, retry_user_report_generation, get_all_faqs, create_general_faq, update_general_faq, delete_general_faq, publish_general_faq, unpublish_general_faq, waitlist_data, get_waitlist_subscription_by_id
+from services.admin.admin_console_service import admin_dashboard_console, get_all_users, get_list_of_user_reports, get_failed_reports_with_user_details, retry_user_report_generation, get_all_faqs, create_general_faq, update_general_faq, delete_general_faq, publish_general_faq, unpublish_general_faq, waitlist_data, get_waitlist_subscription_by_id, bulk_retry_user_report_generation
 from common.admin.admin_dependencies import get_current_admin_user
 from models.faqs import FAQCreate, FAQUpdate
-from typing import Optional
+from typing import Optional, List
+
+class RetryReportsRequest(BaseModel):
+    report_ids: List[str]
 
 router = APIRouter(prefix="/admin", tags=["Admin Console"], dependencies=[Depends(get_current_admin_user)])
 
@@ -26,6 +30,14 @@ async def user_reports(user_id: str, db: AsyncIOMotorDatabase = Depends(get_db),
 @router.get("/failed-reports")
 async def failed_reports_with_user_details(db: AsyncIOMotorDatabase = Depends(get_db), page: int = Query(1, ge=1), limit: int = Query(10, ge=1, le=50), search_value: str = None):
     return await get_failed_reports_with_user_details(db, page, limit, search_value)
+
+@router.post("/retry-report-generation")
+async def retry_report_generation(
+    payload: RetryReportsRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    return await bulk_retry_user_report_generation(db, payload.report_ids, background_tasks)
 
 
 @router.post("/retry-report-generation/{report_id}")
