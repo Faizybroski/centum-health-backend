@@ -274,12 +274,12 @@ async def retry_user_report_generation(db: AsyncIOMotorDatabase, report_id: str,
         retry_count = report.get("retry_count", 0)
         
         # Check if max retries reached
-        # if retry_count >= 3:
-        #     logger.info("Maximum retry attempts (3) reached. Please contact support for further assistance.")
-        #     return JSONResponse(
-        #         content={"message": "Maximum retry attempts (3) reached. Please contact support for further assistance."},
-        #         status_code=status.HTTP_400_BAD_REQUEST
-        #     )
+        if retry_count >= 3:
+            logger.info("Maximum retry attempts (3) reached. Please contact support for further assistance.")
+            return JSONResponse(
+                content={"message": "Maximum retry attempts (3) reached. Please contact support for further assistance."},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         
         # Increment retry count and update status to pending
         await db.user_reports.update_one(
@@ -732,15 +732,15 @@ async def bulk_retry_user_report_generation(db: AsyncIOMotorDatabase, report_ids
 
             retry_count = report.get("retry_count", 0)
 
-            # if retry_count >= 3:
-            #     failed_count += 1
-            #     results.append({
-            #         "report_id": report_id,
-            #         "report_title": report_title,
-            #         "status": "max_retries",
-            #         "message": "Maximum retry attempts (3) reached"
-            #     })
-            #     continue
+            if retry_count >= 3:
+                failed_count += 1
+                results.append({
+                    "report_id": report_id,
+                    "report_title": report_title,
+                    "status": "max_retries",
+                    "message": "Maximum retry attempts (3) reached"
+                })
+                continue
 
             await db.user_reports.update_one(
                 {"_id": ObjectId(report_id)},

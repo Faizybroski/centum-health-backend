@@ -111,7 +111,7 @@ async def subscribe_waitlist(request: Request, payload: WaitlistSchema, backgrou
             "year": now.year,
             "app_name": "Centum Health"
         })
-        to_waitlist_email_html = render_email_template("waitlist_email_to_admin.html", {
+        to_waitlist_email_html = render_email_template("waitlist_to_user.html", {
             "subscriber_email": payload.email,
             "subscription_type": (payload.subscription_type).value,
             "subscribed_at": now.strftime("%Y-%m-%d %H:%M:%S"),

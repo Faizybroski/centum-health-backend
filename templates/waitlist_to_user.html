@@ -18,6 +18,9 @@
         padding: 24px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       }
+      .primary {
+        color: hsl(173, 79%, 38%);
+      }
       h2 {
         color: #111827;
         margin-bottom: 12px;
@@ -67,7 +70,7 @@
 
       <p>
         Thank you for your interest in <strong>{{ app_name }}</strong>. You’ve
-        been successfully added to our waitlist for the selected plan.
+        been successfully added to our waitlist for the <span class="primary">{{ subscription_type }}</span> plan.
       </p>
 
       <p>
